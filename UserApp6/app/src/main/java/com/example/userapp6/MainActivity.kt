@@ -20,8 +20,13 @@ class MainActivity : ComponentActivity() {
     lateinit var getUsersUseCase: GetUsersUseCase
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
         (application as App).appComponent.inject(this)
+        super.onCreate(savedInstanceState)
+
+        // INTENTIONAL LEAK — demonstrates LeakCanary detection
+        // A static reference keeps this Activity in memory after it's destroyed.
+        // LeakCanary will report this in the notification shade.
+        LeakHolder.leakedActivities.add(this)  // ← adds every rotation, never removed
 
         val users = getUsersUseCase.execute()
 
@@ -31,6 +36,10 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+}
+
+object LeakHolder {
+    val leakedActivities = mutableListOf<MainActivity>()
 }
 
 @Composable
